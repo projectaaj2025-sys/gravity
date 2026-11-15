@@ -4,7 +4,7 @@ const vm = require('node:vm');
 const assert = require('node:assert/strict');
 const katex = require('../assets/katex/katex.min.js');
 const ctx = vm.createContext({console});
-for (const file of ['content.js','ir-content.js','foundations.js','contemporary.js','derivations.js','formula-notes.js','deep-explanations.js','alekseev-expanded.js','practice.js','extra-foundations-practice.js','contemporary-practice.js','book-practice.js','alekseev-practice.js','workbook.js','inline-equations.js','math-render.js']) {
+for (const file of ['content.js','ir-content.js','foundations.js','contemporary.js','derivations.js','formula-notes.js','deep-explanations.js','alekseev-expanded.js','graduate-theory.js','practice.js','extra-foundations-practice.js','contemporary-practice.js','book-practice.js','alekseev-practice.js','graduate-practice.js','workbook.js','graduate-workbook.js','inline-equations.js','math-render.js']) {
  vm.runInContext(fs.readFileSync(file,'utf8'),ctx,{filename:file});
 }
 const data = vm.runInContext('({chapters, extraPractice, displayMath, inlineEquations, workbookTasks})',ctx);
