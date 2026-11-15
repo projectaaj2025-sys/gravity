@@ -75,3 +75,11 @@ footer,footer a,.back-link,.lesson-head p,.lesson-tags,.article-tabs,.article-as
 .practice-source{margin:9px 0 0;color:#526b5d;font-size:11px;line-height:1.6}
 .practice-source a{text-decoration:underline;text-underline-offset:3px;color:#285c46;font-weight:700}
 @media(max-width:760px){.article-body .formula .katex{font-size:.95em}}
+/* Явно размеченные формулы сохраняют математическую типографику внутри текста. */
+.inline-math{display:inline-block;vertical-align:baseline;max-width:100%}
+.inline-math .katex{font-size:1.03em}
+.reading-source{padding:14px 17px;border-left:3px solid #b68b5e;background:#f6f0e6;font-size:13px;line-height:1.7}
+.reading-source a{font-weight:700}
+.inline-math{overflow-x:auto;overflow-y:hidden;vertical-align:middle;overscroll-behavior-x:contain}
+.inline-math{padding-inline:.12em}
+.inline-fraction{max-width:100%;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;padding-inline:.12em}
