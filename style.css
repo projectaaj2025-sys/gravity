@@ -95,3 +95,6 @@ footer,footer a,.back-link,.lesson-head p,.lesson-tags,.article-tabs,.article-as
 @media(max-width:760px){.workbook-scroll-note{display:block}}
 /* Длинные названия тем задачника не должны расширять мобильный экран. */
 .workbook-topic{white-space:normal;max-width:100%;overflow-wrap:anywhere}
+/* Даём индексам и высоким дробям место в строке, сохраняя горизонтальную прокрутку. */
+.inline-math,.inline-fraction{padding-block:.22em;line-height:1.5}
+.inline-math .katex{font-size:1.08em}

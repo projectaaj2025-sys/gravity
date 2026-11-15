@@ -66,3 +66,33 @@ function renderCourseMath(lessonId){
  if(lessonId){let nodes=document.querySelectorAll('.article-body .formula:not([data-tex-display])');let expressions=displayMath[lessonId]||[];if(nodes.length!==expressions.length){console.error('Несовпадение формул урока',lessonId,nodes.length,expressions.length);return}nodes.forEach((node,i)=>{if(expressions[i]){node.tabIndex=0;node.setAttribute('role','group');node.setAttribute('aria-label','Формула; прокрутите по горизонтали при необходимости');try{katex.render(expressions[i],node,{throwOnError:true,displayMode:true,output:'htmlAndMathml'})}catch(error){console.error('Ошибка оформления формулы',lessonId,i,error)}}});}
  renderInlineFractions(document.getElementById('app'));
 }
+
+// При копировании KaTeX содержит и скрытый MathML, и видимые HTML-глифы.
+// Заменяем каждую выбранную формулу её исходным LaTeX, чтобы не копировать
+// два перемешанных набора символов. Частичное выделение формулы расширяем до целой.
+if(typeof document!=='undefined') document.addEventListener('copy', event => {
+ const selection=window.getSelection(), root=document.getElementById('app');
+ if(!root || !selection || selection.isCollapsed || selection.rangeCount!==1 || !event.clipboardData) return;
+ const range=selection.getRangeAt(0).cloneRange();
+ if(!root.contains(range.startContainer) || !root.contains(range.endContainer)) return;
+ const mathAt=node=>(node.nodeType===Node.ELEMENT_NODE?node:node.parentElement)?.closest('.katex');
+ const start=mathAt(range.startContainer), end=mathAt(range.endContainer);
+ if(start) range.setStartBefore(start);
+ if(end) range.setEndAfter(end);
+ const fragment=range.cloneContents();
+ const maths=[...fragment.querySelectorAll('.katex')];
+ if(!maths.length) return;
+ for(const math of maths){
+  const annotation=math.querySelector('annotation[encoding="application/x-tex"]');
+  // Если исходный TeX недоступен, оставляем стандартное копирование браузера.
+  if(!annotation) return;
+  math.replaceWith(document.createTextNode(`$${annotation.textContent}$`));
+ }
+ const container=document.createElement('div');
+ container.style.cssText='position:fixed;left:-10000px;top:0;width:1000px;white-space:normal;';
+ container.append(fragment);document.body.append(container);
+ const text=container.innerText;
+ container.remove();
+ event.clipboardData.setData('text/plain',text);
+ event.preventDefault();
+});
