@@ -4,10 +4,10 @@ const vm = require('node:vm');
 const assert = require('node:assert/strict');
 const katex = require('../assets/katex/katex.min.js');
 const ctx = vm.createContext({console});
-for (const file of ['content.js','ir-content.js','foundations.js','contemporary.js','derivations.js','formula-notes.js','deep-explanations.js','alekseev-expanded.js','practice.js','extra-foundations-practice.js','contemporary-practice.js','book-practice.js','alekseev-practice.js','inline-equations.js','math-render.js']) {
+for (const file of ['content.js','ir-content.js','foundations.js','contemporary.js','derivations.js','formula-notes.js','deep-explanations.js','alekseev-expanded.js','practice.js','extra-foundations-practice.js','contemporary-practice.js','book-practice.js','alekseev-practice.js','workbook.js','inline-equations.js','math-render.js']) {
  vm.runInContext(fs.readFileSync(file,'utf8'),ctx,{filename:file});
 }
-const data = vm.runInContext('({chapters, extraPractice, displayMath, inlineEquations})',ctx);
+const data = vm.runInContext('({chapters, extraPractice, displayMath, inlineEquations, workbookTasks})',ctx);
 const lessons = data.chapters.flatMap(c=>c.lessons);
 assert.equal(new Set(lessons.map(l=>l.id)).size,lessons.length,'Повторный id урока');
 let count=0, exercises=0;
@@ -25,4 +25,11 @@ for(const lesson of lessons){
  count+=legacy.length+explicit.length;exercises+=items.length;
 }
 for(const [raw,latex] of data.inlineEquations){assert.ok(raw);check(latex,`Внутритекстовое выражение ${raw}`)}
+assert.equal(new Set(data.workbookTasks.map(t=>t.id)).size,data.workbookTasks.length,'Повторный id задачи');
+for(const task of data.workbookTasks){
+ assert.ok(task.title&&task.source&&task.topic&&task.hint&&task.symbols&&task.steps.length>=2,`Неполная задача ${task.id}`);
+ assert.ok(lessons.some(l=>l.id===task.lesson),`Нет связанной темы для ${task.id}`);
+ for(const m of [task.question,...task.steps].join(' ').matchAll(/data-tex(?:-display)?="([^"]+)"/g))check(m[1].replaceAll('&amp;','&').replaceAll('&lt;','<').replaceAll('&gt;','>').replaceAll('&quot;','"'),`Задачник ${task.id}`);
+}
+console.log(`Задачник: проверены ${data.workbookTasks.length} задач с подсказками, решениями и формулами.`);
 console.log(`Проверены ${lessons.length} тем, ${count} вынесенных формул, ${data.inlineEquations.length} внутритекстовых шаблонов и ${exercises} заданий.`);
