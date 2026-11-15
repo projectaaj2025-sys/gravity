@@ -93,3 +93,5 @@ footer,footer a,.back-link,.lesson-head p,.lesson-tags,.article-tabs,.article-as
 .workbook-card h3{overflow-wrap:anywhere;hyphens:auto}
 .workbook-scroll-note{display:none;color:#526f5d;font-size:10px;line-height:1.4;margin:-11px 0 15px}
 @media(max-width:760px){.workbook-scroll-note{display:block}}
+/* Длинные названия тем задачника не должны расширять мобильный экран. */
+.workbook-topic{white-space:normal;max-width:100%;overflow-wrap:anywhere}
