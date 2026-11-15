@@ -54,3 +54,15 @@ footer,footer a,.back-link,.lesson-head p,.lesson-tags,.article-tabs,.article-as
 .additional-lab{margin:25px 0 65px;scroll-margin-top:24px}.additional-lab .lesson-head h2{font:400 clamp(30px,3vw,42px)/1.15 var(--serif);margin:15px 0;color:#233c3b}.additional-lab .lesson-head{padding:45px 0 25px}.lab-caption{font-size:12px;line-height:1.7;color:#465e53}.lab-controls>a{font-size:11px;color:#285c46;font-weight:800;text-decoration:underline;text-underline-offset:3px}.article-body a{color:#285c46;text-decoration:underline;text-underline-offset:3px}
 .sidebar{overflow-y:auto}.brand,.side-label,.side-nav,.side-chapters,.side-bottom{flex-shrink:0}
 .lab-jump{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}.lab-jump a{font-size:11px;font-weight:800;color:#305c47;background:#e5eee5;border:1px solid #c6d5c8;padding:10px 13px}.lab-jump a:hover{background:#d4e4d7}
+
+/* Формула и её расшифровка всегда образуют единый читаемый блок. */
+.article-body .formula{margin:26px 0 0;padding:20px 23px;border-left:3px solid #658a72;background:#e9f0e8;color:#183d2c;font-size:clamp(17px,2.1vw,21px);line-height:1.7;overflow-x:auto;overflow-y:hidden;max-width:100%;overscroll-behavior-x:contain}
+.article-body .formula sub,.article-body .formula sup{font-size:.7em;line-height:0}
+.article-body .formula-legend{margin:0 0 26px;padding:14px 23px 16px;border-left:3px solid #658a72;background:#f2f6ef;color:#344f41;font-size:13px;line-height:1.75;overflow-wrap:anywhere}
+.article-body .formula-legend>strong{display:block;color:#244b37;font:800 10px var(--sans);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px}
+.article-body .formula-legend p{margin:0}.article-body .formula-legend b{color:#1b3e2d}
+.deep-explanation{margin:40px 0 12px;padding:25px 27px;background:#f2f5f0;border:1px solid #d6e2d6}.deep-explanation h3{margin:12px 0;font-size:23px}.deep-explanation p:last-child{margin-bottom:0}.deep-explanation .formula{background:#e3ede2}.deep-explanation .formula-legend{background:#fbfdf9}
+@media(max-width:760px){.article-body .formula{padding:16px 14px;font-size:17px}.article-body .formula-legend{padding:12px 14px}.deep-explanation{padding:20px 16px}}
+.crumb{min-width:0;overflow:hidden;white-space:nowrap}.crumb span:last-child{overflow:hidden;text-overflow:ellipsis}
+@media(max-width:760px){.lesson-head h1,.lesson-head h2,.article-body h2,.article-body h3,.quiz h2,.practice-heading h2{overflow-wrap:anywhere;hyphens:auto}}
+.lesson-pagination a{flex:1;min-width:0;overflow-wrap:anywhere;hyphens:auto}
