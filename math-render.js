@@ -34,19 +34,35 @@ function fractionTex(token){
  const subs={'₀':'0','₁':'1','₂':'2','₃':'3','₄':'4','₅':'5','₆':'6','₇':'7','₈':'8','₉':'9'};
  const supers={'⁰':'0','¹':'1','²':'2','³':'3','⁴':'4','⁵':'5','⁶':'6','⁷':'7','⁸':'8','⁹':'9','⁻':'-'};
  const greek={'α':'\\alpha','β':'\\beta','γ':'\\gamma','δ':'\\delta','ε':'\\varepsilon','η':'\\eta','θ':'\\theta','κ':'\\kappa','λ':'\\lambda','μ':'\\mu','ν':'\\nu','ξ':'\\xi','π':'\\pi','ρ':'\\rho','σ':'\\sigma','τ':'\\tau','φ':'\\phi','ω':'\\omega','Δ':'\\Delta','Φ':'\\Phi','Λ':'\\Lambda','Ω':'\\Omega','∂':'\\partial','∇':'\\nabla','−':'-','·':'\\cdot '};
- let out='',i=0;while(i<token.length){const ch=token[i];const unit=token.slice(i).match(/^(км|кг|м|с|Н)/u);if(unit){out+=`\\text{${unit[0]}}`;i+=unit[0].length;continue}if(ch==='ȧ'||ch==='ä'){out+=ch==='ȧ'?'\\dot{a}':'\\ddot{a}';i++;continue}if(ch==='_'){let m=token.slice(i+1).match(/^[A-Za-zΑ-Ωα-ω0-9]+/u);if(!m)return null;out+=`_{${fractionTex(m[0])}}`;i+=m[0].length+1;continue}if(subs[ch]){let v='';while(subs[token[i]])v+=subs[token[i++]];out+=`_{${v}}`;continue}if(supers[ch]){let v='';while(supers[token[i]])v+=supers[token[i++]];out+=`^{${v}}`;continue}if(ch==='√'){i++;if(token[i]==='('){let end=token.indexOf(')',i);if(end<0)return null;out+=`\\sqrt{${fractionTex(token.slice(i+1,end))}}`;i=end+1}else{let x=token[i++];if(!x)return null;out+=`\\sqrt{${greek[x]||x}}`}continue}out+=greek[ch]?greek[ch]+' ':ch;i++}return out;
+ let out='',i=0;while(i<token.length){const ch=token[i];const unit=token.slice(i).match(/^(км|кг|м|с|Н)/u);if(unit){out+=`\\text{${unit[0]}}`;i+=unit[0].length;continue}if(ch==='ȧ'||ch==='ä'){out+=ch==='ȧ'?'\\dot{a}':'\\ddot{a}';i++;continue}if(ch==='_'){let m=token.slice(i+1).match(/^[A-Za-zΑ-Ωα-ω0-9]+/u);if(!m)return null;out+=`_{${fractionTex(m[0])}}`;i+=m[0].length+1;continue}if(subs[ch]){let v='';while(subs[token[i]])v+=subs[token[i++]];out+=`_{${v}}`;continue}if(supers[ch]){let v='';while(supers[token[i]])v+=supers[token[i++]];out+=`^{${v}}`;continue}if(ch==='√'){i++;if(token[i]==='('){let end=token.indexOf(')',i);if(end<0)return null;out+=`\\sqrt{${fractionTex(token.slice(i+1,end))}}`;i=end+1}else{let found=token.slice(i).match(/^[A-Za-zΑ-Ωα-ω0-9₀-₉²³⁴]+/u);if(!found)return null;out+=`\\sqrt{${fractionTex(found[0])}}`;i+=found[0].length}continue}out+=greek[ch]?greek[ch]+' ':ch;i++}return out;
+}
+function renderExplicitMath(root){
+ if(!root || typeof katex==='undefined')return;
+ root.querySelectorAll('[data-tex], [data-tex-display]').forEach(node=>{
+  if(node.dataset.mathRendered) return;
+  const display=node.hasAttribute('data-tex-display');
+  const source=display?node.dataset.texDisplay:node.dataset.tex;
+  try{
+   katex.render(source,node,{throwOnError:true,displayMode:display,output:'htmlAndMathml'});
+   node.dataset.mathRendered='true';
+   if(display){node.tabIndex=0;node.setAttribute('role','group');node.setAttribute('aria-label','Формула; прокрутите по горизонтали при необходимости')}
+  }catch(error){if(!node.textContent)node.textContent=source;console.error('Ошибка оформления формулы',error)}
+ });
 }
 function renderInlineFractions(root){
  if(!root || typeof katex==='undefined')return;
+ renderExplicitMath(root);
+ renderInlineEquations(root);
  // Сохраняем индексы знаменателя, если они оформлены соседним HTML sub.
  for(const sub of root.querySelectorAll('sub')){const prev=sub.previousSibling;if(prev?.nodeType===Node.TEXT_NODE && /\/[A-Za-zΑ-Ωα-ω0-9]+$/u.test(prev.nodeValue) && /^[A-Za-zΑ-Ωα-ω0-9]+$/u.test(sub.textContent)){prev.nodeValue += '_'+sub.textContent;sub.remove()}}
  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(n){const p=n.parentElement;if(!p||p.closest('.formula,.katex,.practice-score,script,style,code,svg,sup,sub,button kbd'))return NodeFilter.FILTER_REJECT;return n.nodeValue.includes('/')?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT}});
  const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
  for(const node of nodes){let text=node.nodeValue;fractionPattern.lastIndex=0;let match,last=0,fragment=document.createDocumentFragment(),changed=false;while((match=fractionPattern.exec(text))){const numerator=match[1],denominator=match[2];const before=text[match.index-1]||'',after=text[match.index+match[0].length]||'';if(/[\p{L}\p{N}_]/u.test(before)||/[\p{L}\p{N}_]/u.test(after))continue;if((numerator==='http'||numerator==='https')||(!/[A-Za-zȧäА-Яа-яΑ-Ωα-ωΔ∂ΦΛΩρπ0-9]/u.test(numerator))||(!/[A-Za-zȧäА-Яа-яΑ-Ωα-ωΔ∂ΦΛΩρπ0-9]/u.test(denominator)))continue;let n=fractionTex(numerator),d=fractionTex(denominator);if(!n||!d)continue;let span=document.createElement('span');span.className='inline-fraction';try{katex.render(`\\dfrac{${n}}{${d}}`,span,{throwOnError:true,displayMode:false,output:'htmlAndMathml'});}catch{continue}fragment.append(document.createTextNode(text.slice(last,match.index)),span);last=match.index+match[0].length;changed=true}if(changed){fragment.append(document.createTextNode(text.slice(last)));node.replaceWith(fragment)}}
+ requestAnimationFrame(()=>root.querySelectorAll('.inline-math, .inline-fraction').forEach(el=>{if(el.scrollWidth>el.clientWidth+2){el.tabIndex=0;el.title='Длинную формулу можно прокрутить горизонтально'}}));
 }
 function renderCourseMath(lessonId){
  if(typeof katex==='undefined')return;
- document.querySelectorAll('[data-tex]').forEach(node=>{try{katex.render(node.dataset.tex,node,{throwOnError:true,output:'htmlAndMathml'})}catch(error){console.error('Ошибка оформления формулы',error)}});
- if(lessonId){let nodes=document.querySelectorAll('.article-body .formula');let expressions=displayMath[lessonId]||[];nodes.forEach((node,i)=>{if(expressions[i]){node.tabIndex=0;node.setAttribute('role','group');node.setAttribute('aria-label','Формула; прокрутите по горизонтали при необходимости');try{katex.render(expressions[i],node,{throwOnError:true,displayMode:true,output:'htmlAndMathml'})}catch(error){console.error('Ошибка оформления формулы',lessonId,i,error)}}});}
+ renderExplicitMath(document.getElementById('app'));
+ if(lessonId){let nodes=document.querySelectorAll('.article-body .formula:not([data-tex-display])');let expressions=displayMath[lessonId]||[];if(nodes.length!==expressions.length){console.error('Несовпадение формул урока',lessonId,nodes.length,expressions.length);return}nodes.forEach((node,i)=>{if(expressions[i]){node.tabIndex=0;node.setAttribute('role','group');node.setAttribute('aria-label','Формула; прокрутите по горизонтали при необходимости');try{katex.render(expressions[i],node,{throwOnError:true,displayMode:true,output:'htmlAndMathml'})}catch(error){console.error('Ошибка оформления формулы',lessonId,i,error)}}});}
  renderInlineFractions(document.getElementById('app'));
 }
