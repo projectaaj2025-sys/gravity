@@ -34,5 +34,9 @@ for(const task of data.workbookTasks){
  assert.ok(lessons.some(l=>l.id===task.lesson),`Нет связанной темы для ${task.id}`);
  checkMarkup([task.question,task.symbols,task.hint,...task.steps].join(' '),`Задачник ${task.id}`);
 }
+// В обеих версиях спорная формула записана без сокращённого квадратного символа.
+const expandedRicci=String.raw`R^{(1)}=\partial_\mu\partial_\nu h^{\mu\nu}-\eta^{\mu\nu}\partial_\mu\partial_\nu h`;
+assert.ok(lessons.find(l=>l.id==='grad-fierz-pauli').theory.includes(expandedRicci));
+assert.ok(data.workbookTasks.find(t=>t.id==='grad-fp-constraint').steps.some(s=>s.includes(expandedRicci)));
 console.log(`Задачник: проверены ${data.workbookTasks.length} задач с подсказками, решениями и формулами.`);
 console.log(`Проверены ${lessons.length} тем, ${count} вынесенных формул, ${data.inlineEquations.length} внутритекстовых шаблонов и ${exercises} заданий.`);

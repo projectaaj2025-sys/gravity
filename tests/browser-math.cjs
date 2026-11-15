@@ -52,7 +52,7 @@ const base = process.env.BASE_URL || 'http://127.0.0.1:8000';
   return {text:clipboard.getData('text/plain'),prevented:e.defaultPrevented,tex:formula.dataset.texDisplay};
  });
  assert.equal(copy.prevented,true);assert.equal(copy.text,`$${copy.tex}$`);
- assert.equal(copy.tex,String.raw`R^{(1)}=\partial_\mu\partial_\nu h^{\mu\nu}-\Box h`);
+ assert.equal(copy.tex,String.raw`R^{(1)}=\partial_\mu\partial_\nu h^{\mu\nu}-\eta^{\mu\nu}\partial_\mu\partial_\nu h`);
  const indices=await page.evaluate(()=>{const e=[...document.querySelectorAll('[data-tex-display]')].find(e=>e.dataset.texDisplay.startsWith('R^{(1)}='));return {sup:e.querySelectorAll('math msup').length,sub:e.querySelectorAll('math msub').length}});
  assert.ok(indices.sup>=2 && indices.sub>=2,'Индексы должны быть размечены в MathML');
  // Смешанное выделение текста и формулы должно сохранить окружающий текст.
