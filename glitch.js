@@ -10,8 +10,8 @@
   { title: 'Сбой пространства-времени', text: 'Метрика <b>g&#956;&#957;</b> повреждена: 41% секторов читаются как сюрреализм.' },
   { title: 'Последнее предупреждение', text: 'Вселенная будет перезагружена в <b>постоянной Планка</b>. Сохраните любопытство.' },
  ];
- const RUNTIME = 9000;      // сколько длится глитч, мс
- const FINISH_DELAY = 5200; // пауза перед автозакрытием финальной шутки, мс
+ const RUNTIME = 9000;       // сколько длится глитч, мс
+ const FINISH_DELAY = 12000; // сколько финальная шутка ждёт на экране до автозакрытия, мс
  const CLICK_KEY = 'gravity-glitch-clicks';
 
  let timers = [], victims = [], bars = [], pieces = [], raf = 0, running = false, finished = false, lastFocused = null;
@@ -19,8 +19,10 @@
  const byId = id => document.getElementById(id); // свой хелпер: пасхалка не зависит от app.js
  const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
  const root = () => document.documentElement;
- const later = (fn, ms) => timers.push(setTimeout(fn, ms));
- const every = (fn, ms) => timers.push(setInterval(fn, ms));
+ // Обёртка: сбой одного эффекта не должен рвать весь сценарий и мешать финалу.
+ const safe = fn => () => { try { fn() } catch (error) { console.error('Пасхалка: эффект остановлен', error) } };
+ const every = (fn, ms) => timers.push(setInterval(safe(fn), ms));
+ const once = (fn, ms) => timers.push(setTimeout(safe(fn), ms));
 
  function clicks() { return Number(localStorage.getItem(CLICK_KEY) || 0) }
  function countClick() {
@@ -40,7 +42,7 @@
    <div class="glitch-scan"></div><div class="glitch-noise"></div><div class="glitch-bars"></div>
    <div class="glitch-ascii" aria-hidden="true"></div></div>
   <div class="glitch-window" id="glitch-window" role="alertdialog" aria-modal="true" tabindex="-1" aria-labelledby="glitch-title" aria-describedby="glitch-text">
-   <div class="glitch-bar"><span class="glitch-bar-icon">☣</span><span id="glitch-window-name">Центр защиты — Гравитация иначе</span><span class="glitch-bar-fake">—&nbsp;□&nbsp;✕</span></div>
+   <div class="glitch-bar"><span class="glitch-bar-icon">☣</span><span id="glitch-window-name">Центр защиты — Гравитация иначе</span><span class="glitch-bar-fake">—&nbsp;□<button type="button" class="glitch-close" id="glitch-close" aria-label="Прервать шутку">✕</button></span></div>
    <div class="glitch-body">
     <div class="glitch-face" id="glitch-face" aria-hidden="true">☣</div>
     <div class="glitch-copy">
@@ -53,7 +55,9 @@
    </div>
    <div class="glitch-actions"><button type="button" class="glitch-ok" id="glitch-ok" hidden>Хорошо, отпустили ✓</button><span class="glitch-count" id="glitch-count" hidden></span></div>
   </div>`;
-  document.body.appendChild(overlay);
+  // Оверлей — прямой потомок <html>: у него гарантированно нет предка с filter/transform,
+  // который превратил бы position:fixed в позиционирование от блока body.
+  document.documentElement.appendChild(overlay);
   const box = overlay.querySelector('.glitch-bars');
   bars = [0, 1, 2].map(() => {
    const item = document.createElement('i');
@@ -84,7 +88,11 @@
  }
  function restoreText() { victims.forEach(item => { item.node.innerHTML = item.original }); victims = [] }
  function jitterBars() { bars.forEach(bar => { bar.style.transform = `translate3d(${(Math.random() * 26 - 13).toFixed(1)}vw, ${(Math.random() * 100).toFixed(0)}vh, 0) scaleX(${(0.4 + Math.random()).toFixed(2)})`; bar.style.opacity = (0.25 + Math.random() * 0.6).toFixed(2) }) }
- function shakeWindow() { const win = byId('glitch-window'); if (win) win.style.transform = `translate(${(Math.random() * 12 - 6).toFixed(1)}px, ${(Math.random() * 9 - 4.5).toFixed(1)}px)` }
+ function shakeWindow() {
+  const win = byId('glitch-window');
+  // Центрирование держим в той же строке: иначе окно прыгает в левый верхний угол.
+  if (win) win.style.transform = `translate(-50%,-50%) translate(${(Math.random() * 12 - 6).toFixed(1)}px, ${(Math.random() * 9 - 4.5).toFixed(1)}px)`;
+ }
 
  /* --- финальный салют из символов -------------------------------------- */
  function confetti() {
@@ -130,8 +138,7 @@
   raf = 0; running = false; finished = false;
   restoreText();
   pieces.forEach(piece => piece.node.remove()); pieces = [];
-  root().classList.remove('glitch-on', 'glitch-soft');
-  document.body.classList.remove('glitch-lock');
+  root().classList.remove('glitch-on', 'glitch-soft', 'glitch-lock');
   const overlay = byId('glitch-overlay');
   if (overlay) overlay.hidden = true;
   if (lastFocused && lastFocused.isConnected) lastFocused.focus();
@@ -143,8 +150,7 @@
   finished = true;
   timers.forEach(clearTimeout); timers.forEach(clearInterval); timers = [];
   restoreText();
-  root().classList.remove('glitch-on', 'glitch-soft');
-  document.body.classList.remove('glitch-lock');
+  root().classList.remove('glitch-on', 'glitch-soft', 'glitch-lock');
   const win = byId('glitch-window');
   byId('glitch-overlay').classList.add('is-done'); // шум и полосы гаснут вместе с «угрозой»
   if (win) win.style.transform = '';
@@ -155,10 +161,10 @@
   byId('glitch-ok').hidden = false;
   const count = byId('glitch-count');
   count.hidden = false;
-  count.textContent = `Кнопку нажимали ${total} ${times(total)}. Любопытство — тоже сила природы.`;
+  count.textContent = `Кнопку нажимали ${total} ${times(total)}. Любопытство — тоже сила природы. Окно закроется само или по Escape.`;
   byId('glitch-ok').focus();
   confetti();
-  later(stop, FINISH_DELAY);
+  once(stop, FINISH_DELAY);
  }
 
  function start() {
@@ -170,8 +176,8 @@
   resetWindow();
   setAlert(0, 'alert');
   overlay.hidden = false;
-  document.body.classList.add('glitch-lock');
-  root().classList.add(reduceMotion() ? 'glitch-soft' : 'glitch-on');
+  // Прокрутку блокируем на <html>: overflow:hidden на body viewport не удерживает.
+  root().classList.add('glitch-lock', reduceMotion() ? 'glitch-soft' : 'glitch-on');
 
   if (!reduceMotion()) {
    // Берём только «листовые» заголовки без вложенных тегов: замена текста не должна ломать разметку.
@@ -185,7 +191,7 @@
    every(shakeWindow, 95);
   }
   // Предупреждения сменяются в обоих режимах: в мягком это единственная «анимация».
-  ALERTS.slice(1).forEach((entry, index) => later(() => setAlert(index + 1, 'alert'), (index + 1) * 2100));
+  ALERTS.slice(1).forEach((entry, index) => once(() => setAlert(index + 1, 'alert'), (index + 1) * 2100));
 
   const startedAt = Date.now();
   const tick = () => {
@@ -195,7 +201,7 @@
    if (ratio >= 1) finish(total);
   };
   every(tick, 110);
-  later(() => finish(total), RUNTIME + 500); // страховка, если интервал собьётся
+  once(() => finish(total), RUNTIME + 500); // страховка, если интервал собьётся
  }
 
  function onKeydown(event) {
@@ -214,9 +220,11 @@
   const target = event.target instanceof Element ? event.target : null;
   if (!target) return;
   if (target.closest('#glitch-button')) { event.preventDefault(); start(); return }
-  if (target.closest('#glitch-ok')) { stop(); return }
+  if (target.closest('#glitch-ok') || target.closest('#glitch-close')) { stop(); return }
+  // Случайный щелчок по фону не должен обрывать шутку: фон закрывает её только в финале,
+  // а во время «сканирования» прервать можно крестиком окна или клавишей Escape.
   const overlay = byId('glitch-overlay');
-  if (overlay && !overlay.hidden && target === overlay.querySelector('.glitch-stage')) stop();
+  if (overlay && !overlay.hidden && finished && target === overlay.querySelector('.glitch-stage')) stop();
  });
  document.addEventListener('keydown', onKeydown);
 })();
